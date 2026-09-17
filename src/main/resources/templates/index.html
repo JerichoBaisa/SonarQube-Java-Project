@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevOps Shack ProjectOps Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="app-shell">
+    <header class="topbar">
+        <a href="/" class="brand">
+            <span class="brand-mark">DS</span>
+            <span>
+                <strong>DevOps Shack</strong>
+                <small>ProjectOps Studio</small>
+            </span>
+        </a>
+        <nav class="top-actions">
+            <a class="ghost-btn" href="/api/projects" target="_blank">REST API</a>
+            <a class="ghost-btn" href="/h2-console" target="_blank">H2 Console</a>
+            <button class="icon-btn" type="button" id="themeToggle" aria-label="Toggle theme">◐</button>
+            <a class="primary-btn" href="/projects/new">+ New Project</a>
+        </nav>
+    </header>
+
+    <main class="page-wrap">
+        <section class="hero-panel">
+            <div>
+                <span class="eyebrow">DEVOPS SHACK OPERATIONS WORKSPACE</span>
+                <h1>Build, track and operate your <span>DevOps projects</span>.</h1>
+                <p>One workspace for delivery status, priorities, environments, ownership, progress, repositories and operational actions.</p>
+            </div>
+            <div class="hero-score">
+                <span>Portfolio Progress</span>
+                <strong th:text="${stats.averageProgress + '%'}">0%</strong>
+                <div class="progress-track large"><div class="progress-fill" th:style="'width:' + ${stats.averageProgress} + '%' "></div></div>
+            </div>
+        </section>
+
+        <div th:if="${success}" class="toast success" th:text="${success}"></div>
+
+        <section class="metric-grid">
+            <article class="metric-card">
+                <span class="metric-icon orange">◆</span>
+                <div><small>Total Projects</small><strong th:text="${stats.total}">0</strong></div>
+            </article>
+            <article class="metric-card">
+                <span class="metric-icon cyan">▶</span>
+                <div><small>Active</small><strong th:text="${stats.active}">0</strong></div>
+            </article>
+            <article class="metric-card">
+                <span class="metric-icon green">✓</span>
+                <div><small>Completed</small><strong th:text="${stats.completed}">0</strong></div>
+            </article>
+            <article class="metric-card">
+                <span class="metric-icon red">!</span>
+                <div><small>Critical</small><strong th:text="${stats.critical}">0</strong></div>
+            </article>
+            <article class="metric-card">
+                <span class="metric-icon purple">★</span>
+                <div><small>Favorites</small><strong th:text="${stats.favorites}">0</strong></div>
+            </article>
+        </section>
+
+        <section class="workspace-card">
+            <div class="section-head">
+                <div>
+                    <span class="eyebrow">PROJECT WORKSPACE</span>
+                    <h2>Delivery portfolio</h2>
+                </div>
+                <a class="secondary-btn" href="/projects/export.csv">Export CSV</a>
+            </div>
+
+            <form class="filter-grid" method="get" action="/projects">
+                <div class="search-field">
+                    <span>⌕</span>
+                    <input type="search" name="q" th:value="${q}" placeholder="Search projects, owner, tags...">
+                </div>
+                <select name="status">
+                    <option value="">All statuses</option>
+                    <option th:each="s : ${statuses}" th:value="${s}" th:text="${s.label}" th:selected="${selectedStatus == s}"></option>
+                </select>
+                <select name="category">
+                    <option value="">All categories</option>
+                    <option th:each="c : ${categories}" th:value="${c}" th:text="${c.label}" th:selected="${selectedCategory == c}"></option>
+                </select>
+                <select name="priority">
+                    <option value="">All priorities</option>
+                    <option th:each="p : ${priorities}" th:value="${p}" th:text="${p.label}" th:selected="${selectedPriority == p}"></option>
+                </select>
+                <select name="favorite">
+                    <option value="">All projects</option>
+                    <option value="true" th:selected="${favorite == true}">Favorites only</option>
+                    <option value="false" th:selected="${favorite == false}">Non-favorites</option>
+                </select>
+                <select name="sort">
+                    <option value="updated" th:selected="${sort == 'updated'}">Recently updated</option>
+                    <option value="created" th:selected="${sort == 'created'}">Recently created</option>
+                    <option value="name" th:selected="${sort == 'name'}">Name A-Z</option>
+                    <option value="progress" th:selected="${sort == 'progress'}">Highest progress</option>
+                    <option value="priority" th:selected="${sort == 'priority'}">Priority</option>
+                </select>
+                <button class="primary-btn filter-btn" type="submit">Apply</button>
+                <a class="link-btn" href="/projects">Reset</a>
+            </form>
+
+            <div th:if="${projects.empty}" class="empty-state">
+                <div class="empty-icon">◇</div>
+                <h3>No projects found</h3>
+                <p>Try another filter or create a new DevOps Shack project.</p>
+                <a class="primary-btn" href="/projects/new">Create Project</a>
+            </div>
+
+            <div class="project-grid" th:unless="${projects.empty}">
+                <article class="project-card" th:each="project : ${projects.content}">
+                    <div class="project-card-top">
+                        <div class="project-title-wrap">
+                            <span class="category-dot"></span>
+                            <div>
+                                <a th:href="@{'/projects/' + ${project.id}}" class="project-title" th:text="${project.name}">Project</a>
+                                <p th:text="${project.summary}">Summary</p>
+                            </div>
+                        </div>
+                        <form th:action="@{'/projects/' + ${project.id} + '/favorite'}" method="post">
+                            <button class="favorite-btn" th:classappend="${project.favorite} ? ' active' : ''" type="submit" title="Toggle favorite">★</button>
+                        </form>
+                    </div>
+
+                    <div class="badge-row">
+                        <span class="badge" th:classappend="' status-' + ${#strings.toLowerCase(project.status.name())}" th:text="${project.status.label}">Status</span>
+                        <span class="badge priority" th:classappend="' priority-' + ${#strings.toLowerCase(project.priority.name())}" th:text="${project.priority.label}">Priority</span>
+                        <span class="badge neutral" th:text="${project.environment.label}">Env</span>
+                        <span class="badge neutral" th:text="${project.category.label}">Category</span>
+                    </div>
+
+                    <div class="project-meta">
+                        <span><small>Owner</small><strong th:text="${project.owner}">Owner</strong></span>
+                        <span><small>Target</small><strong th:text="${project.targetDate != null ? #temporals.format(project.targetDate, 'dd MMM yyyy') : 'Not set'}">Date</strong></span>
+                    </div>
+
+                    <div class="progress-box">
+                        <div class="progress-label"><span>Progress</span><strong th:text="${project.progress + '%'}">0%</strong></div>
+                        <div class="progress-track"><div class="progress-fill" th:style="'width:' + ${project.progress} + '%' "></div></div>
+                    </div>
+
+                    <div class="card-actions">
+                        <a class="small-btn" th:href="@{'/projects/' + ${project.id}}">Open</a>
+                        <a class="small-btn" th:href="@{'/projects/' + ${project.id} + '/edit'}">Edit</a>
+                        <form th:action="@{'/projects/' + ${project.id} + '/status'}" method="post">
+                            <button class="small-btn" type="submit">Next Status</button>
+                        </form>
+                        <div class="menu-wrap">
+                            <button class="small-btn menu-trigger" type="button">•••</button>
+                            <div class="action-menu">
+                                <form th:action="@{'/projects/' + ${project.id} + '/duplicate'}" method="post"><button type="submit">Duplicate</button></form>
+                                <form th:action="@{'/projects/' + ${project.id} + '/archive'}" method="post"><button type="submit">Archive</button></form>
+                                <form th:action="@{'/projects/' + ${project.id} + '/delete'}" method="post" onsubmit="return confirm('Delete this project permanently?')"><button class="danger-text" type="submit">Delete</button></form>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+
+            <div class="pagination" th:if="${projects.totalPages > 1}">
+                <a th:classappend="${projects.first} ? ' disabled' : ''"
+                   th:href="@{/projects(page=${projects.number - 1},q=${q},status=${selectedStatus},category=${selectedCategory},priority=${selectedPriority},favorite=${favorite},sort=${sort})}">← Previous</a>
+                <span>Page <strong th:text="${projects.number + 1}">1</strong> of <strong th:text="${projects.totalPages}">1</strong></span>
+                <a th:classappend="${projects.last} ? ' disabled' : ''"
+                   th:href="@{/projects(page=${projects.number + 1},q=${q},status=${selectedStatus},category=${selectedCategory},priority=${selectedPriority},favorite=${favorite},sort=${sort})}">Next →</a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <strong>DevOps Shack</strong> ProjectOps Studio · Java 21 · Spring Boot · Maven · H2
+    </footer>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

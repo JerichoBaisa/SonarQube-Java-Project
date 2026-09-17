@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${project.name} + ' · DevOps Shack ProjectOps Studio'">Project</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="app-shell">
+    <header class="topbar">
+        <a href="/" class="brand"><span class="brand-mark">DS</span><span><strong>DevOps Shack</strong><small>ProjectOps Studio</small></span></a>
+        <nav class="top-actions"><button class="icon-btn" type="button" id="themeToggle">◐</button><a class="ghost-btn" href="/projects">← Dashboard</a><a class="primary-btn" th:href="@{'/projects/' + ${project.id} + '/edit'}">Edit Project</a></nav>
+    </header>
+
+    <main class="page-wrap">
+        <div th:if="${success}" class="toast success" th:text="${success}"></div>
+        <section class="detail-hero">
+            <div class="detail-main">
+                <div class="badge-row">
+                    <span class="badge" th:classappend="' status-' + ${#strings.toLowerCase(project.status.name())}" th:text="${project.status.label}"></span>
+                    <span class="badge priority" th:classappend="' priority-' + ${#strings.toLowerCase(project.priority.name())}" th:text="${project.priority.label}"></span>
+                    <span class="badge neutral" th:text="${project.environment.label}"></span>
+                    <span class="badge neutral" th:text="${project.category.label}"></span>
+                </div>
+                <h1 th:text="${project.name}">Project</h1>
+                <p th:text="${project.summary}">Summary</p>
+                <div class="detail-actions">
+                    <form th:action="@{'/projects/' + ${project.id} + '/favorite'}" method="post"><button class="secondary-btn" type="submit" th:text="${project.favorite ? '★ Favorited' : '☆ Add Favorite'}"></button></form>
+                    <form th:action="@{'/projects/' + ${project.id} + '/status'}" method="post"><button class="secondary-btn" type="submit">Advance Status</button></form>
+                    <form th:action="@{'/projects/' + ${project.id} + '/duplicate'}" method="post"><button class="secondary-btn" type="submit">Duplicate</button></form>
+                    <form th:action="@{'/projects/' + ${project.id} + '/archive'}" method="post"><button class="secondary-btn" type="submit">Archive</button></form>
+                </div>
+            </div>
+            <div class="progress-orb" th:style="'--progress:' + ${project.progress}">
+                <div><strong th:text="${project.progress + '%'}">0%</strong><span>complete</span></div>
+            </div>
+        </section>
+
+        <section class="detail-grid">
+            <article class="info-card wide">
+                <div class="section-head"><div><span class="eyebrow">LIVE CONTROL</span><h2>Update progress</h2></div></div>
+                <form class="progress-form" th:action="@{'/projects/' + ${project.id} + '/progress'}" method="post">
+                    <input type="range" name="progress" min="0" max="100" th:value="${project.progress}" id="progressRange">
+                    <output id="progressOutput" th:text="${project.progress + '%'}">0%</output>
+                    <button class="primary-btn" type="submit">Save Progress</button>
+                </form>
+            </article>
+
+            <article class="info-card">
+                <span class="eyebrow">OWNERSHIP</span>
+                <h3 th:text="${project.owner}">Owner</h3>
+                <p>Accountable owner or team for this project.</p>
+            </article>
+            <article class="info-card">
+                <span class="eyebrow">TIMELINE</span>
+                <h3 th:text="${project.targetDate != null ? #temporals.format(project.targetDate, 'dd MMM yyyy') : 'No target date'}">Target</h3>
+                <p th:text="${project.startDate != null ? 'Started ' + #temporals.format(project.startDate, 'dd MMM yyyy') : 'Start date not set'}"></p>
+            </article>
+            <article class="info-card">
+                <span class="eyebrow">REPOSITORY</span>
+                <h3>Source Control</h3>
+                <a th:if="${project.repoUrl != null and !project.repoUrl.isBlank()}" th:href="${project.repoUrl}" target="_blank" class="text-link" th:text="${project.repoUrl}"></a>
+                <p th:unless="${project.repoUrl != null and !project.repoUrl.isBlank()}">No repository URL added.</p>
+            </article>
+            <article class="info-card">
+                <span class="eyebrow">TAGS</span>
+                <h3>Engineering scope</h3>
+                <p th:text="${project.tags != null and !project.tags.isBlank() ? project.tags : 'No tags added.'}"></p>
+            </article>
+            <article class="info-card wide">
+                <span class="eyebrow">AUDIT</span>
+                <div class="audit-grid">
+                    <div><small>Created</small><strong th:text="${#temporals.format(project.createdAt, 'dd MMM yyyy · HH:mm')}"></strong></div>
+                    <div><small>Last updated</small><strong th:text="${#temporals.format(project.updatedAt, 'dd MMM yyyy · HH:mm')}"></strong></div>
+                    <div><small>Record ID</small><strong th:text="${'#DS-' + project.id}"></strong></div>
+                </div>
+            </article>
+        </section>
+
+        <section class="danger-zone">
+            <div><span class="eyebrow">DANGER ZONE</span><h3>Delete project</h3><p>This permanently removes the record from the H2 database.</p></div>
+            <form th:action="@{'/projects/' + ${project.id} + '/delete'}" method="post" onsubmit="return confirm('Delete this project permanently?')"><button class="danger-btn" type="submit">Delete Project</button></form>
+        </section>
+    </main>
+    <footer class="footer"><strong>DevOps Shack</strong> · ProjectOps Studio</footer>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

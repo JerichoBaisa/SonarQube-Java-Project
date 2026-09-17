@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Not Found · DevOps Shack</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="error-page">
+    <div class="brand-mark large">DS</div>
+    <span class="eyebrow">DEVOPS SHACK</span>
+    <h1>Project not found.</h1>
+    <p th:text="${message}">The requested project does not exist.</p>
+    <a class="primary-btn" href="/projects">Back to Dashboard</a>
+</div>
+</body>
+</html>
